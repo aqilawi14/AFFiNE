@@ -44,6 +44,8 @@ const workspaceToolLabels: Record<string, [string, string]> = {
   journal_open: ['Opening journal', 'Journal'],
   doc_settings: ['Updating doc settings', 'Doc settings'],
   workspace_rename: ['Renaming workspace', 'Workspace renamed'],
+  database_manage: ['Editing database', 'Database'],
+  canvas_manage: ['Drawing on whiteboard', 'Whiteboard'],
 };
 
 function object(value: unknown): Record<string, unknown> | undefined {

@@ -2,7 +2,12 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 
 import { Config } from '../../../base';
-import { DocOrganizer, DocReader, DocWriter } from '../../../core/doc';
+import {
+  DocBlockEditor,
+  DocOrganizer,
+  DocReader,
+  DocWriter,
+} from '../../../core/doc';
 import { PermissionAccess } from '../../../core/permission';
 import { Models } from '../../../models';
 import { DelegatedEditorService } from '../delegated/service';
@@ -33,6 +38,7 @@ import {
   createDocCreateTool,
   createDocReadTool,
   createDocSearchTool,
+  createDocStructuredTools,
   createDocUpdateMetaTool,
   createDocUpdateTool,
   createExaCrawlTool,
@@ -60,6 +66,7 @@ export class ToolRuntime {
     private readonly docReader: DocReader,
     private readonly docWriter: DocWriter,
     private readonly docOrganizer: DocOrganizer,
+    private readonly docBlockEditor: DocBlockEditor,
     private readonly models: Models,
     @Inject(forwardRef(() => PromptRuntime))
     private readonly promptRuntime: Pick<PromptRuntime, 'runText'>,
@@ -222,6 +229,16 @@ export class ToolRuntime {
           );
           tools.workspace_create = createWorkspaceCreateTool(
             createWorkspace.bind(null, options)
+          );
+          break;
+        }
+        case 'docStructured': {
+          Object.assign(
+            tools,
+            createDocStructuredTools(
+              { ac: this.ac, editor: this.docBlockEditor },
+              options
+            )
           );
           break;
         }

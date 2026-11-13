@@ -5,6 +5,7 @@ export * from './doc-canvas-read';
 export * from './doc-compose';
 export * from './doc-read';
 export * from './doc-search';
+export * from './doc-structured';
 export * from './doc-write';
 export * from './error';
 export * from './exa-crawl';

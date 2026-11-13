@@ -8,6 +8,7 @@ import { QuotaModule } from '../quota';
 import { StorageModule } from '../storage';
 import { PgUserspaceDocStorageAdapter } from './adapters/userspace';
 import { PgWorkspaceDocStorageAdapter } from './adapters/workspace';
+import { DocBlockEditor } from './blocks';
 import { DocEventsListener } from './event';
 import { DocStorageCronJob } from './job';
 import { DocStorageOptions } from './options';
@@ -27,12 +28,14 @@ import { DocWriter } from './writer';
     DocEventsListener,
     DocWriter,
     DocOrganizer,
+    DocBlockEditor,
   ],
   exports: [
     DatabaseDocReader,
     DocReader,
     DocWriter,
     DocOrganizer,
+    DocBlockEditor,
     PgWorkspaceDocStorageAdapter,
     PgUserspaceDocStorageAdapter,
   ],
@@ -41,6 +44,7 @@ export class DocStorageModule {}
 export {
   // only for doc-service
   DatabaseDocReader,
+  DocBlockEditor,
   DocOrganizer,
   DocReader,
   DocWriter,
@@ -48,5 +52,11 @@ export {
   PgWorkspaceDocStorageAdapter,
 };
 
+export {
+  CANVAS_COLORS,
+  type CanvasItemInput,
+  DATABASE_COLUMN_TYPES,
+  SHAPE_TYPES,
+} from './blocks';
 export { TAG_COLORS } from './organizer';
 export { DocStorageAdapter, type Editor } from './storage';
