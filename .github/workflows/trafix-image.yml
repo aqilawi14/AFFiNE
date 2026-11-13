@@ -134,6 +134,10 @@ jobs:
         with:
           name: server-native-x64
           path: ./packages/backend/native
+      # The bundler resolves every arch in native/index.js; only x64 is built,
+      # so give it empty placeholders (docker-clean.mjs prunes them from the image).
+      - name: Stub other server-native arches
+        run: touch ./packages/backend/native/server-native.arm64.node ./packages/backend/native/server-native.armv7.node
       - name: Build Server
         run: yarn workspace @affine/server build
       - name: Upload server dist
