@@ -9,11 +9,17 @@ import { property } from 'lit/decorators.js';
 import type { DocDisplayConfig } from '../ai-chat-chips';
 import type { ToolError } from './type';
 
-type DocWriteToolName = 'doc_create' | 'doc_update' | 'doc_update_meta';
+type DocWriteToolName =
+  | 'doc_create'
+  | 'doc_update'
+  | 'doc_update_meta'
+  | 'doc_append'
+  | 'workspace_create';
 
 type DocWriteToolArgs = {
   doc_id?: string;
   title?: string;
+  name?: string;
   content?: string;
 };
 
@@ -33,6 +39,7 @@ interface DocWriteToolResult {
     | {
         success?: boolean;
         docId?: string;
+        workspaceId?: string;
         message?: string;
       }
     | ToolError
@@ -78,6 +85,9 @@ export class DocWriteTool extends WithDisposable(ShadowlessElement) {
 
   private getDocTitle(docId?: string) {
     const { data } = this;
+    if (data.toolName === 'workspace_create') {
+      return data.args.name;
+    }
     if (data.toolName === 'doc_create' || data.toolName === 'doc_update_meta') {
       const title = data.args.title;
       if (title) return title;
@@ -101,6 +111,10 @@ export class DocWriteTool extends WithDisposable(ShadowlessElement) {
         return title ? `Updating "${title}"` : 'Updating document';
       case 'doc_update_meta':
         return title ? `Renaming to "${title}"` : 'Updating document title';
+      case 'doc_append':
+        return title ? `Adding to "${title}"` : 'Adding to document';
+      case 'workspace_create':
+        return title ? `Creating workspace "${title}"` : 'Creating workspace';
       default:
         return 'Updating document';
     }
@@ -114,6 +128,10 @@ export class DocWriteTool extends WithDisposable(ShadowlessElement) {
         return title ? `Updated "${title}"` : 'Document updated';
       case 'doc_update_meta':
         return title ? `Renamed "${title}"` : 'Document title updated';
+      case 'doc_append':
+        return title ? `Added to "${title}"` : 'Content added';
+      case 'workspace_create':
+        return title ? `Created workspace "${title}"` : 'Workspace created';
       default:
         return 'Document updated';
     }
@@ -152,6 +170,28 @@ export class DocWriteTool extends WithDisposable(ShadowlessElement) {
         .name=${name}
         .icon=${this.getToolIcon()}
       ></tool-call-failed>`;
+    }
+
+    if (this.data.toolName === 'workspace_create') {
+      const workspaceId = result.workspaceId;
+      const name = this.getDocTitle() ?? 'Workspace';
+      return html`<tool-result-card
+        .name=${this.getResultLabel(name)}
+        .icon=${this.getToolIcon()}
+        .width=${this.width}
+        .results=${[
+          {
+            title: name,
+            icon: PageIcon(),
+            content: result.message,
+            onClick: () => {
+              if (workspaceId) {
+                window.location.assign(`/workspace/${workspaceId}/all`);
+              }
+            },
+          },
+        ]}
+      ></tool-result-card>`;
     }
 
     const docId = this.getDocId();

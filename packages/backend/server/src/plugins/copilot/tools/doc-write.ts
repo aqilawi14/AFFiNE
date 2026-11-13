@@ -138,6 +138,48 @@ export const buildDocUpdateMetaHandler = (
   };
 };
 
+export const buildDocAppendHandler = (
+  ac: PermissionAccess,
+  writer: DocWriter
+) => {
+  return async (
+    options: CopilotChatOptions,
+    docId: string,
+    content: string
+  ) => {
+    const notFound = toolError(
+      'Doc Append Failed',
+      `Doc with id ${docId} not found.`
+    );
+
+    if (!options?.user || !options.workspace) {
+      return notFound;
+    }
+
+    const canAccess = await ac
+      .user(options.user)
+      .workspace(options.workspace)
+      .doc(docId)
+      .can('Doc.Update');
+
+    if (!canAccess) {
+      return notFound;
+    }
+
+    if (!content.trim()) {
+      return toolError('Doc Append Failed', 'Content cannot be empty');
+    }
+
+    await writer.appendDoc(options.workspace, docId, content, options.user);
+
+    return {
+      success: true,
+      docId,
+      message: 'Content appended to the end of the document',
+    };
+  };
+};
+
 export const createDocCreateTool = (
   createDoc: (title: string, content: string) => Promise<object>
 ) => {
@@ -201,6 +243,32 @@ export const createDocUpdateMetaTool = (
       } catch (err: any) {
         logger.error(`Failed to update document meta: ${doc_id}`, err);
         return toolError('Doc Meta Update Failed', err.message);
+      }
+    },
+  });
+};
+
+export const createDocAppendTool = (
+  appendDoc: (docId: string, content: string) => Promise<object>
+) => {
+  return defineTool({
+    description:
+      'Append markdown content (bullet points, paragraphs, headings, todo items) to the END of an existing document without touching its existing blocks. Prefer this over doc_update when the user wants to add items to a document, because it never rewrites or removes existing content.',
+    inputSchema: z.object({
+      doc_id: z.string().describe('The ID of the document to append to'),
+      content: z
+        .string()
+        .min(1)
+        .describe(
+          'The markdown to append, e.g. "- first point\n- second point" (do NOT include a title H1)'
+        ),
+    }),
+    execute: async ({ doc_id, content }) => {
+      try {
+        return await appendDoc(doc_id, content);
+      } catch (err: any) {
+        logger.error(`Failed to append to document: ${doc_id}`, err);
+        return toolError('Doc Append Failed', err.message);
       }
     },
   });

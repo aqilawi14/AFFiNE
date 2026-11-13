@@ -498,6 +498,8 @@ export class ChatContentStreamObjects extends WithDisposable(
       case 'doc_create':
       case 'doc_update':
       case 'doc_update_meta':
+      case 'doc_append':
+      case 'workspace_create':
         return html`<doc-write-tool
           .data=${streamObject}
           .width=${this.width}
@@ -608,6 +610,8 @@ export class ChatContentStreamObjects extends WithDisposable(
       case 'doc_create':
       case 'doc_update':
       case 'doc_update_meta':
+      case 'doc_append':
+      case 'workspace_create':
         return html`<doc-write-tool
           .data=${streamObject}
           .width=${this.width}

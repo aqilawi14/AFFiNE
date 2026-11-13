@@ -13,18 +13,21 @@ import {
 import { ArtifactRetrievalService } from '../retrieval/artifact';
 import { DocumentRetrievalService } from '../retrieval/document';
 import {
+  buildDocAppendHandler,
   buildDocCanvasGetter,
   buildDocContentGetter,
   buildDocCreateHandler,
   buildDocumentSearch,
   buildDocUpdateHandler,
   buildDocUpdateMetaHandler,
+  buildWorkspaceCreateHandler,
   type CopilotTool,
   type CopilotToolSet,
   createArtifactReadTool,
   createArtifactSearchTool,
   createCodeArtifactTool,
   createConversationSummaryTool,
+  createDocAppendTool,
   createDocCanvasReadTool,
   createDocComposeTool,
   createDocCreateTool,
@@ -39,6 +42,7 @@ import {
   createFrontendSelectionTool,
   createFrontendSnapshotTool,
   createSectionEditTool,
+  createWorkspaceCreateTool,
 } from '../tools';
 import { PromptRuntime } from './prompt-runtime';
 
@@ -101,13 +105,6 @@ export class ToolRuntime {
         if (toolDef[1]) {
           tools[toolDef[0]] = toolDef[1];
         }
-        continue;
-      }
-
-      if (
-        !(env.dev || env.namespaces.canary) &&
-        ['docCreate', 'docUpdate', 'docUpdateMeta'].includes(tool)
-      ) {
         continue;
       }
 
@@ -209,6 +206,21 @@ export class ToolRuntime {
         case 'docUpdate': {
           const updateDoc = buildDocUpdateHandler(this.ac, this.docWriter);
           tools.doc_update = createDocUpdateTool(updateDoc.bind(null, options));
+          break;
+        }
+        case 'docAppend': {
+          const appendDoc = buildDocAppendHandler(this.ac, this.docWriter);
+          tools.doc_append = createDocAppendTool(appendDoc.bind(null, options));
+          break;
+        }
+        case 'workspaceCreate': {
+          const createWorkspace = buildWorkspaceCreateHandler(
+            this.models,
+            this.docWriter
+          );
+          tools.workspace_create = createWorkspaceCreateTool(
+            createWorkspace.bind(null, options)
+          );
           break;
         }
         case 'docUpdateMeta': {

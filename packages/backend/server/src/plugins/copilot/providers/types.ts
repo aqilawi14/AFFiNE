@@ -86,6 +86,8 @@ export const PromptToolsSchema = z
     'docCreate',
     'docUpdate',
     'docUpdateMeta',
+    'docAppend',
+    'workspaceCreate',
     'frontendGetEditorState',
     'frontendReadSelection',
     'frontendReadNodes',

@@ -12,3 +12,4 @@ export * from './exa-search';
 export * from './frontend-read';
 export * from './section-edit';
 export * from './tool';
+export * from './workspace-create';
