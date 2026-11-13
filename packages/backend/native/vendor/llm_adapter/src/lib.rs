@@ -1,0 +1,16 @@
+pub mod backend;
+pub mod capability;
+pub mod core;
+/// Public middleware hooks intended for external request/stream orchestration.
+/// The internal backend dispatch path does not invoke this module directly.
+pub mod middleware;
+pub mod protocol;
+pub mod router;
+#[cfg(feature = "schema")]
+pub mod schema;
+pub mod stream;
+pub mod target;
+pub(crate) mod utils;
+
+#[cfg(test)]
+pub(crate) mod test_support;

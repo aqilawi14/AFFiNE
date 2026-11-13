@@ -132,6 +132,8 @@ strip         = "symbols"
   [profile.release.package.affine_mobile_native]
   strip = "none"
 
-  # [patch.crates-io]
+  [patch.crates-io]
+  # trafix: fixes the Anthropic default endpoint (`/v1/v1/messages` -> 404)
+  llm_adapter = { path = "./packages/backend/native/vendor/llm_adapter" }
   # llm_adapter = { path = "../llm_adapter/crates/llm_adapter" }
   # llm_runtime = { path = "../llm_adapter/crates/llm_runtime" }
