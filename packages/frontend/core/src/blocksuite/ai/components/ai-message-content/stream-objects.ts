@@ -33,6 +33,19 @@ const frontendReadTools = new Set([
   'frontend_snapshot_document',
 ]);
 
+// [calling label, done label] for the workspace organization tools
+const workspaceToolLabels: Record<string, [string, string]> = {
+  doc_list: ['Listing docs', 'Listed docs'],
+  doc_trash: ['Updating trash', 'Trash updated'],
+  tag_manage: ['Managing tags', 'Tags'],
+  collection_manage: ['Managing collections', 'Collections'],
+  folder_manage: ['Managing folders', 'Folders'],
+  favorite_manage: ['Managing favorites', 'Favorites'],
+  journal_open: ['Opening journal', 'Journal'],
+  doc_settings: ['Updating doc settings', 'Doc settings'],
+  workspace_rename: ['Renaming workspace', 'Workspace renamed'],
+};
+
 function object(value: unknown): Record<string, unknown> | undefined {
   return value && typeof value === 'object'
     ? (value as Record<string, unknown>)
@@ -520,7 +533,9 @@ export class ChatContentStreamObjects extends WithDisposable(
           ></section-edit-tool>
         `;
       default: {
-        const name = streamObject.toolName + ' tool calling';
+        const name =
+          workspaceToolLabels[streamObject.toolName]?.[0] ??
+          streamObject.toolName + ' tool calling';
         return html`
           <tool-call-card .name=${name} .width=${this.width}></tool-call-card>
         `;
@@ -632,11 +647,19 @@ export class ChatContentStreamObjects extends WithDisposable(
           ></section-edit-tool>
         `;
       default: {
-        const name = streamObject.toolName + ' tool result';
+        const labels = workspaceToolLabels[streamObject.toolName];
+        const name = labels?.[1] ?? streamObject.toolName + ' tool result';
+        const result = object(streamObject.result);
+        const message =
+          typeof result?.message === 'string' ? result.message : undefined;
+        const failed = result?.type === 'error';
         return html`
           <tool-result-card
-            .name=${name}
+            .name=${failed ? `${labels?.[0] ?? name} failed` : name}
             .width=${this.width}
+            .results=${
+              labels && message ? [{ title: name, content: message }] : []
+            }
           ></tool-result-card>
         `;
       }

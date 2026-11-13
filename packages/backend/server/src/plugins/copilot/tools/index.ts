@@ -13,3 +13,4 @@ export * from './frontend-read';
 export * from './section-edit';
 export * from './tool';
 export * from './workspace-create';
+export * from './workspace-organize';
