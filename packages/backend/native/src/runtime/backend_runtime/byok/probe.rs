@@ -177,8 +177,10 @@ fn probe_request_for_operation(operation: &str) -> ExecutableRequest {
       model: String::new(),
       messages: vec![message],
       stream: false,
-      max_tokens: Some(8),
-      temperature: Some(0.0),
+      // Leave room for a complete tool call when the model chooses to use the tool.
+      max_tokens: Some(64),
+      // Claude 5 family models reject `temperature`; the probe does not need it.
+      temperature: None,
       tools: if operation == "tool_calling" {
         vec![CoreToolDefinition {
           name: "byok_probe".to_string(),
@@ -203,7 +205,8 @@ fn probe_request_for_operation(operation: &str) -> ExecutableRequest {
         "additionalProperties": false
       }),
       max_tokens: Some(16),
-      temperature: Some(0.0),
+      // Claude 5 family models reject `temperature`; the probe does not need it.
+      temperature: None,
       reasoning: None,
       strict: Some(true),
       response_mime_type: Some("application/json".to_string()),

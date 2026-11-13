@@ -115,7 +115,9 @@ export async function buildCanonicalNativeRequest({
       model,
       messages: normalizedMessages,
       maxTokens: options.maxOutputTokens ?? undefined,
-      temperature: options.temperature ?? undefined,
+      temperature: supportsTemperature(model)
+        ? (options.temperature ?? undefined)
+        : undefined,
       tools: toolContracts,
       include,
       reasoning,
@@ -138,6 +140,12 @@ export async function buildCanonicalNativeRequest({
   return {
     request,
   };
+}
+
+// Claude 5 family models reject the `temperature` parameter.
+function supportsTemperature(model: string) {
+  const match = /claude-[a-z]+-(\d+)/.exec(model);
+  return !match || Number(match[1]) < 5;
 }
 
 export async function buildCanonicalNativeStructuredRequest({
@@ -172,7 +180,9 @@ export async function buildCanonicalNativeStructuredRequest({
       messages: normalizedMessages,
       schema: explicitResponseContract?.responseSchemaJson,
       maxTokens: options.maxOutputTokens ?? undefined,
-      temperature: options.temperature ?? undefined,
+      temperature: supportsTemperature(model)
+        ? (options.temperature ?? undefined)
+        : undefined,
       reasoning,
       strict: options.strict,
       responseMimeType: 'application/json',
