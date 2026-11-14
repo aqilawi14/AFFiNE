@@ -226,7 +226,8 @@ export class CapabilityRuntime {
           })
         );
       },
-      { maxSteps: 20, signal: options.signal }
+      // trafix: room for multi-doc setups (e.g. one doc + tracker per role)
+      { maxSteps: 40, signal: options.signal }
     );
     const runtimeEvents = this.events;
     const eventContext = this.eventContext(options);
