@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import { Injectable } from '@nestjs/common';
 
+import { OneMB, readBufferWithLimit } from '../../../base';
 import { Config } from '../../../base/config';
 import { CopilotPromptInvalid } from '../../../base/error/errors.gen';
 import { BackendRuntimeProvider } from '../../../core/backend-runtime';
@@ -36,6 +37,7 @@ import {
   type PromptMessage,
   type StreamObject,
 } from '../providers/types';
+import { CopilotStorage } from '../storage';
 import {
   buildToolContracts,
   type RequiredStructuredOutputContract,
@@ -80,7 +82,8 @@ export class CapabilityRuntime {
     private readonly conversations: ConversationPolicy,
     private readonly tools: ToolRuntime,
     private readonly events: CopilotRuntimeEventConsumer,
-    private readonly config: Config
+    private readonly config: Config,
+    private readonly storage: CopilotStorage
   ) {}
 
   private async access(options: RuntimeOptions) {
@@ -183,7 +186,7 @@ export class CapabilityRuntime {
     const toolSet = await this.tools.getTools(options, '');
     const { request } = await buildCanonicalNativeRequest({
       model: 'route-selected',
-      messages,
+      messages: await this.inlineCopilotBlobs(messages, options),
       options,
       toolContracts: buildToolContracts(toolSet),
       attachmentCapability,
@@ -191,6 +194,54 @@ export class CapabilityRuntime {
       reasoning: options.reasoning ? { effort: 'medium' } : undefined,
     });
     return { request: { ...request, stream: true }, toolSet };
+  }
+
+  /**
+   * Chat uploads are stored as copilot blobs and referenced by URL. Providers
+   * that fetch URLs themselves (e.g. Anthropic) cannot reach them, so inline
+   * the current user's blobs as data URLs before building the request.
+   */
+  private async inlineCopilotBlobs(
+    messages: PromptMessage[],
+    options: RuntimeOptions
+  ): Promise<PromptMessage[]> {
+    const { user, workspace } = options;
+    if (!user || !workspace) return messages;
+    const inline = async (url: string) => {
+      const key = this.storage.keyFromUrl(user, workspace, url);
+      if (!key) return undefined;
+      try {
+        const { body, metadata } = await this.storage.get(user, workspace, key);
+        if (!body) return undefined;
+        const buffer = await readBufferWithLimit(body, 20 * OneMB);
+        const mimeType = metadata?.contentType || 'image/png';
+        return `data:${mimeType};base64,${buffer.toString('base64')}`;
+      } catch {
+        return undefined;
+      }
+    };
+    return Promise.all(
+      messages.map(async message => {
+        if (!message.attachments?.length) return message;
+        const attachments = await Promise.all(
+          message.attachments.map(async attachment => {
+            if (typeof attachment === 'string') {
+              return (await inline(attachment)) ?? attachment;
+            }
+            if ('attachment' in attachment) {
+              const url = await inline(attachment.attachment);
+              return url ? { ...attachment, attachment: url } : attachment;
+            }
+            if (attachment.kind === 'url') {
+              const url = await inline(attachment.url);
+              return url ? { ...attachment, url } : attachment;
+            }
+            return attachment;
+          })
+        );
+        return { ...message, attachments };
+      })
+    );
   }
 
   private async stream(

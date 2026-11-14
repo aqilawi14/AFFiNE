@@ -10,6 +10,7 @@ import { CapabilityRuntime } from '../../plugins/copilot/runtime/capability-runt
 import { CopilotRuntimeEventConsumer } from '../../plugins/copilot/runtime/copilot-runtime-event-consumer';
 import { executeToolCall } from '../../plugins/copilot/runtime/tool/bridge';
 import type { ToolRuntime } from '../../plugins/copilot/runtime/tool-runtime';
+import { CopilotStorage } from '../../plugins/copilot/storage';
 
 const test = ava;
 
@@ -93,7 +94,8 @@ function runtimeFixture(streamError?: string, enabled = true) {
       conversation,
       tools,
       consumer,
-      config
+      config,
+      { keyFromUrl: () => undefined } as unknown as CopilotStorage
     ),
   };
 }
